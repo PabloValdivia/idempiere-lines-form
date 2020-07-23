@@ -26,6 +26,7 @@ import org.compiere.model.MProduct;
 import org.compiere.model.MStorageOnHand;
 import org.compiere.model.MUOM;
 import org.compiere.model.Query;
+import org.compiere.process.DocAction;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.KeyNamePair;
@@ -79,6 +80,7 @@ public class WQuickInputProducts extends CustomForm implements WTableModelListen
 
 	@Override
 	protected void initForm() {
+		
 		setWidth("100%");
 		setHeight("70%");
 		setClosable(false);
@@ -150,6 +152,10 @@ public class WQuickInputProducts extends CustomForm implements WTableModelListen
 		
 		int Record_ID = getGridTab().getRecord_ID();
 	    movement = new MMovement(ctx, Record_ID, null);
+	    
+	    if (movement.getDocStatus() == DocAction.ACTION_Complete || 
+	    		movement.getDocStatus() == DocAction.ACTION_Close)
+	    	throw new AdempiereException("@Completed@");
 	        
 		MLookup lookupProduct = MLookupFactory.get(Env.getCtx(), getWindowNo(), 0, DisplayType.Search, Env.getLanguage(ctx),
 				"M_Product_ID",0,false,"M_Product.AD_Client_ID = @#AD_Client_ID@ and M_Product.IsActive='Y'");
@@ -455,6 +461,8 @@ public class WQuickInputProducts extends CustomForm implements WTableModelListen
 		int i = 0; 
 		for (MMovementLine movementLine : lsLine) {
 			
+			if (movementLine.getM_Movement().getDocStatus().equals("CO"))
+				throw new AdempiereException("@Completed@");			
 			
 			line = new Vector<Object>();
 			linesData.add(line);
