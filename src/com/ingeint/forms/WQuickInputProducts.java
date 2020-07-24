@@ -33,6 +33,7 @@ import org.compiere.util.KeyNamePair;
 import org.compiere.util.Msg;
 import org.compiere.util.Util;
 import org.zkoss.zk.ui.Component;
+import org.zkoss.zk.ui.Components;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
@@ -159,16 +160,12 @@ public class WQuickInputProducts extends CustomForm implements WTableModelListen
 	        
 		MLookup lookupProduct = MLookupFactory.get(Env.getCtx(), getWindowNo(), 0, DisplayType.Search, Env.getLanguage(ctx),
 				"M_Product_ID",0,false,"M_Product.AD_Client_ID = @#AD_Client_ID@ and M_Product.IsActive='Y'");
-
-		MLookup lookupUOM = MLookupFactory.get(Env.getCtx(), getWindowNo(), 0, DisplayType.TableDir, Env.getLanguage(ctx),
-				"C_UOM_ID",0,false,"C_UOM.AD_Client_ID = @#AD_Client_ID@ and C_UOM.IsActive='Y' and C_UOM.C_UOM_ID "
-						+ "IN (SELECT C_UOM_ID FROM C_UOM_Conversion where isActive = 'Y' )");
 		
-		MLookup lookupLocator = MLookupFactory.get(Env.getCtx(), getWindowNo(), 2204, DisplayType.TableDir, Env.getLanguage(ctx),
+		MLookup lookupLocator = MLookupFactory.get(Env.getCtx(), getWindowNo(), 0, DisplayType.TableDir, Env.getLanguage(ctx),
 				"M_Locator_ID",0,false,"AD_Client_ID = @#AD_Client_ID@ and IsActive='Y' AND M_Locator_ID NOT IN ("
 						+ "SELECT M_ReserveLocator_ID FROM M_Warehouse wh where wh.AD_Client_ID = @#AD_Client_ID@) ");
 		
-		MLookup lookupLocatorTo = MLookupFactory.get(Env.getCtx(), getWindowNo(), 2204, DisplayType.TableDir, Env.getLanguage(ctx),
+		MLookup lookupLocatorTo = MLookupFactory.get(Env.getCtx(), getWindowNo(), 0, DisplayType.TableDir, Env.getLanguage(ctx),
 				"M_LocatorTo_ID",0,false,"AD_Client_ID = @#AD_Client_ID@ and IsActive='Y' AND M_Locator_ID NOT IN ("
 					+ "SELECT M_ReserveLocator_ID FROM M_Warehouse wh where wh.AD_Client_ID = @#AD_Client_ID@) ");
 		fQtyOnOK = new WNumberEditor(); 
@@ -235,7 +232,6 @@ public class WQuickInputProducts extends CustomForm implements WTableModelListen
 	
 				if (isUpdate) {	
 					fProduct  = new WSearchEditor("M_Product_ID", true, false, true, lookupProduct);
-					fUOM = new WTableDirEditor ("M_Locator_ID", true, false, true, lookupUOM);
 					fLocator =  new WTableDirEditor ("M_Locator_ID", true, false, true, lookupLocator);
 					fLocatorTo =  new WTableDirEditor ("M_LocatorTo_ID", true, false, true, lookupLocatorTo);	
 					WNumberEditor fQty = new WNumberEditor(); 
@@ -252,6 +248,11 @@ public class WQuickInputProducts extends CustomForm implements WTableModelListen
 					lstCellProduct.appendChild(fProduct.getComponent());
 					lstCellProduct.setParent(item);
 					fProduct.getComponent().setFocus(true);					
+					
+					Env.setContext(Env.getCtx(), getWindowNo(),"M_Product_ID", product.getKey());
+					MLookup lookupUOM = MLookupFactory.get(Env.getCtx(), getWindowNo(), 0,2222, DisplayType.TableDir);
+					
+					fUOM = new WTableDirEditor ("C_UOM_ID", true, false, true, lookupUOM);
 					
 					lstCell = new Listcell();
 					KeyNamePair uom = (KeyNamePair)line.get(C_UOM);
@@ -311,16 +312,25 @@ public class WQuickInputProducts extends CustomForm implements WTableModelListen
 								int M_Product_ID = (Integer)evt.getNewValue();
 								MProduct product = new MProduct(ctx,M_Product_ID , null);
 								((ListModelTable)productTable.getModel()).setValueAt(new KeyNamePair(product.get_ID(), product.getValue()), item.getIndex(),C_Product);
+								((ListModelTable)productTable.getModel()).setValueAt(new KeyNamePair(product.getC_UOM_ID(), product.getC_UOM().getName()), item.getIndex(),C_UOM);
+
+								Listcell lcUOM =(Listcell)item.getChildren().get(C_UOM);
+								Components.removeAllChildren(lcUOM);
+								
+								Env.setContext(Env.getCtx(), getWindowNo(),"M_Product_ID", M_Product_ID);
+								MLookup lookupUOM = MLookupFactory.get(Env.getCtx(), getWindowNo(), 0,2222, DisplayType.TableDir);
+								fUOM = new WTableDirEditor ("C_UOM_ID", true, false, true, lookupUOM);
+								fUOM.getComponent().setWidth("100%");
+								fUOM.setValue(product.getC_UOM_ID());
+								lcUOM.appendChild(fUOM.getComponent());
+								
 								if (line_ID>0) {
 									MMovementLine movementLine = new MMovementLine(ctx, line_ID, null);
 									movementLine.setM_Product_ID(M_Product_ID);
 									movementLine.saveEx();
 									loadLines();
 								}
-								
-								fUOM.setValue(product.getC_UOM_ID());
-								((ListModelTable)productTable.getModel()).setValueAt(new KeyNamePair(product.getC_UOM_ID(), product.getC_UOM().getName()), item.getIndex(),C_UOM);
-								
+															
 							}else {
 								((ListModelTable)productTable.getModel()).setValueAt(new KeyNamePair(0, ""), item.getIndex(),C_Product);
 							}
