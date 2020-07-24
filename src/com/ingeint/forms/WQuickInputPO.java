@@ -29,11 +29,11 @@ import org.compiere.util.Env;
 import org.compiere.util.KeyNamePair;
 import org.compiere.util.Msg;
 import org.compiere.util.Util;
-import org.zkoss.zk.ui.Component;
 import org.zkoss.zk.ui.Components;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
+import org.zkoss.zk.ui.util.Clients;
 import org.zkoss.zul.Borderlayout;
 import org.zkoss.zul.Center;
 import org.zkoss.zul.Div;
@@ -470,6 +470,7 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 		productTable.setModel(tableModel);
 
 		Utils.setWidths(productTable.getListhead(), "5%", "40%", "10%", "10%", "10%", "10%", "10%", "5%");
+		Clients.scrollIntoView(productTable.getItemAtIndex(i));
 	}
 
 	private void saveNewLine() {
@@ -509,29 +510,8 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 
 	@Override
 	public void tableChanged(WTableModelEvent event) {
-		ListModelTable model = (ListModelTable) event.getModel();
-		if (event.getColumn() == C_Product) {
-			List<Component> children = productTable.getChildren();
-			Listitem listItem = (Listitem) children.get(event.getIndex0() + 1);
-			List<Component> children2 = listItem.getChildren();
-
-			KeyNamePair product = (KeyNamePair) model.getValueAt(event.getIndex0(), C_Product);
-			int M_Product_ID = product.getKey();
-		}
-
-		Object lt = model.getValueAt(event.getIndex0(), C_Product);
-		if (!lt.toString().isEmpty()) {
-			KeyNamePair product = (KeyNamePair) lt;
-			int M_Product_ID = product.getKey();
-
-			List<Component> children = productTable.getChildren();
-			Listitem listItem = (Listitem) children.get(event.getIndex0() + 1);
-			List<Component> children2 = listItem.getChildren();
-		} else {
-			List<Component> children = productTable.getChildren();
-			Listitem listItem = (Listitem) children.get(event.getIndex0() + 1);
-			List<Component> children2 = listItem.getChildren();
-		}
+		
 	}
+		
 
 }

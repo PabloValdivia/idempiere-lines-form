@@ -37,6 +37,7 @@ import org.zkoss.zk.ui.Components;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
+import org.zkoss.zk.ui.util.Clients;
 import org.zkoss.zul.Borderlayout;
 import org.zkoss.zul.Center;
 import org.zkoss.zul.Div;
@@ -67,7 +68,7 @@ public class WQuickInputProducts extends CustomForm implements WTableModelListen
 	private int C_Locator;
 	private int C_LocatorTo;
 	private int C_Qty;
-	private int C_Select;
+	protected int C_Select;
 	private int C_Line;
 	private Button btnDelete;
 	private Vector<Vector<Object>> linesData;
@@ -518,6 +519,7 @@ public class WQuickInputProducts extends CustomForm implements WTableModelListen
 		productTable.setModel(tableModel);
 		
 		Utils.setWidths(productTable.getListhead(), "5%", "40%", "10%", "10%", "10%", "10%", "10%", "5%");	
+		Clients.scrollIntoView(productTable.getItemAtIndex(i));
 	}
 	
 	private void saveNewLine() {
