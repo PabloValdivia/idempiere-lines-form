@@ -29,10 +29,11 @@ import org.compiere.util.Env;
 import org.compiere.util.KeyNamePair;
 import org.compiere.util.Msg;
 import org.compiere.util.Util;
-import org.zkoss.zk.ui.Component;
+import org.zkoss.zk.ui.Components;
 import org.zkoss.zk.ui.event.Event;
 import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
+import org.zkoss.zk.ui.util.Clients;
 import org.zkoss.zul.Borderlayout;
 import org.zkoss.zul.Center;
 import org.zkoss.zul.Div;
@@ -150,10 +151,6 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 				Env.getLanguage(ctx), "M_Product_ID", 0, false,
 				"M_Product.AD_Client_ID = @#AD_Client_ID@ and M_Product.IsActive='Y'");
 
-		MLookup lookupUOM = MLookupFactory.get(Env.getCtx(), getWindowNo(), 0, DisplayType.TableDir,
-				Env.getLanguage(ctx), "C_UOM_ID", 0, false,
-				"C_UOM.AD_Client_ID = @#AD_Client_ID@ and C_UOM.IsActive='Y' and C_UOM.C_UOM_ID "
-						+ "IN (SELECT C_UOM_ID FROM C_UOM_Conversion where isActive = 'Y' )");
 
 		fQtyOnOK = new WNumberEditor();
 		fPriceActual = new WNumberEditor();
@@ -222,7 +219,6 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 
 				if (isUpdate) {
 					fProduct = new WSearchEditor("M_Product_ID", true, false, true, lookupProduct);
-					fUOM = new WTableDirEditor("M_Locator_ID", true, false, true, lookupUOM);
 
 					WNumberEditor fQty = new WNumberEditor();
 					WNumberEditor fPrice = new WNumberEditor();
@@ -242,6 +238,11 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 					lstCellProduct.setParent(item);
 					fProduct.getComponent().setFocus(true);
 
+					Env.setContext(Env.getCtx(), getWindowNo(),"M_Product_ID", product.getKey());
+					MLookup lookupUOM = MLookupFactory.get(Env.getCtx(), getWindowNo(), 0,2222, DisplayType.TableDir);
+					
+					fUOM = new WTableDirEditor ("C_UOM_ID", true, false, true, lookupUOM);
+					
 					lstCell = new Listcell();
 					KeyNamePair uom = (KeyNamePair) line.get(C_UOM);
 					if (uom.getKey() != 0)
@@ -319,17 +320,29 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 								((ListModelTable) productTable.getModel()).setValueAt(
 										new KeyNamePair(product.get_ID(), product.getValue()), item.getIndex(),
 										C_Product);
+								
+								((ListModelTable) productTable.getModel()).setValueAt(
+										new KeyNamePair(product.getC_UOM_ID(), product.getC_UOM().getName()),
+										item.getIndex(), C_UOM);
+					
+								Listcell lcUOM =(Listcell)item.getChildren().get(C_UOM);
+								Components.removeAllChildren(lcUOM);
+								
+								Env.setContext(Env.getCtx(), getWindowNo(),"M_Product_ID", M_Product_ID);
+								MLookup lookupUOM = MLookupFactory.get(Env.getCtx(), getWindowNo(), 0,2222, DisplayType.TableDir);
+								fUOM = new WTableDirEditor ("C_UOM_ID", true, false, true, lookupUOM);
+								fUOM.getComponent().setWidth("100%");
+								fUOM.setValue(product.getC_UOM_ID());
+								lcUOM.appendChild(fUOM.getComponent());
+								
 								if (line_ID > 0) {
 									MOrderLine movementLine = new MOrderLine(ctx, line_ID, null);
 									movementLine.setM_Product_ID(M_Product_ID);
 									movementLine.saveEx();
 									loadLines();
 								}
-
-								fUOM.setValue(product.getC_UOM_ID());
-								((ListModelTable) productTable.getModel()).setValueAt(
-										new KeyNamePair(product.getC_UOM_ID(), product.getC_UOM().getName()),
-										item.getIndex(), C_UOM);
+								
+								
 
 							} else {
 								((ListModelTable) productTable.getModel()).setValueAt(new KeyNamePair(0, ""),
@@ -457,6 +470,7 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 		productTable.setModel(tableModel);
 
 		Utils.setWidths(productTable.getListhead(), "5%", "40%", "10%", "10%", "10%", "10%", "10%", "5%");
+		Clients.scrollIntoView(productTable.getItemAtIndex(i));
 	}
 
 	private void saveNewLine() {
@@ -500,29 +514,8 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 
 	@Override
 	public void tableChanged(WTableModelEvent event) {
-		ListModelTable model = (ListModelTable) event.getModel();
-		if (event.getColumn() == C_Product) {
-			List<Component> children = productTable.getChildren();
-			Listitem listItem = (Listitem) children.get(event.getIndex0() + 1);
-			List<Component> children2 = listItem.getChildren();
-
-			KeyNamePair product = (KeyNamePair) model.getValueAt(event.getIndex0(), C_Product);
-			int M_Product_ID = product.getKey();
-		}
-
-		Object lt = model.getValueAt(event.getIndex0(), C_Product);
-		if (!lt.toString().isEmpty()) {
-			KeyNamePair product = (KeyNamePair) lt;
-			int M_Product_ID = product.getKey();
-
-			List<Component> children = productTable.getChildren();
-			Listitem listItem = (Listitem) children.get(event.getIndex0() + 1);
-			List<Component> children2 = listItem.getChildren();
-		} else {
-			List<Component> children = productTable.getChildren();
-			Listitem listItem = (Listitem) children.get(event.getIndex0() + 1);
-			List<Component> children2 = listItem.getChildren();
-		}
+		
 	}
+		
 
 }
