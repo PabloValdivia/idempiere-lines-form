@@ -432,8 +432,8 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 				line.add(new KeyNamePair(0, ""));
 			}
 			line.add(movementLine.getQtyEntered());
-			line.add(movementLine.getPriceEntered());
-			line.add(movementLine.getDiscount());
+			line.add(movementLine.get_Value("NewPrice"));
+			line.add(movementLine.get_Value("NewDiscount"));
 			line.add(movementLine.getLineNetAmt());
 			line.add(i == index);
 			i++;
@@ -476,16 +476,20 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 		int C_UOM_ID = (Integer) fUOM.getValue();
 		BigDecimal qtyMove = (BigDecimal) fQtyOnOK.getValue();
 		BigDecimal PriceEntered = (BigDecimal) fPriceActual.getValue();
-		BigDecimal Discount = (BigDecimal) fDiscount.getValue();
+		BigDecimal Discount = ((BigDecimal) fDiscount.getValue());
+		BigDecimal DiscountAmt = Discount.divide(Env.ONEHUNDRED);
+		
+		BigDecimal NewPrice = PriceEntered.subtract(PriceEntered.multiply(DiscountAmt));
 
 		MOrderLine orderLine = new MOrderLine(order);
 		orderLine.setM_Product_ID(M_Product_ID);
 		orderLine.set_ValueOfColumn("C_UOM_ID", C_UOM_ID);
 		orderLine.setQtyOrdered(qtyMove);
 		orderLine.setQtyEntered(qtyMove);
-		orderLine.setPriceActual(PriceEntered);
-		orderLine.setPriceEntered(PriceEntered);
-		orderLine.setDiscount(Discount);
+		orderLine.set_ValueOfColumn("NewPrice", PriceEntered);
+		orderLine.setPriceEntered(NewPrice);
+		orderLine.setPriceActual(NewPrice);
+		orderLine.set_ValueOfColumn("NewDiscount", Discount);
 		orderLine.saveEx();
 
 	}
