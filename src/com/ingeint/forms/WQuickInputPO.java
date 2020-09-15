@@ -431,23 +431,24 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 		linesData = new Vector<Vector<Object>>();
 		Vector<Object> line;
 		int i = 0;
-		for (MOrderLine movementLine : lsLine) {
+		for (MOrderLine orderLine : lsLine) {
 
 			line = new Vector<Object>();
 			linesData.add(line);
-			line.add(new KeyNamePair(movementLine.get_ID(), movementLine.getLine() + ""));
-			line.add(new KeyNamePair(movementLine.getM_Product_ID(), movementLine.getM_Product().getName() + ""));
-			if (movementLine.get_Value(MUOM.COLUMNNAME_C_UOM_ID) != null) {
-				int C_UOM_ID = (Integer) movementLine.get_Value(MUOM.COLUMNNAME_C_UOM_ID);
+			line.add(new KeyNamePair(orderLine.get_ID(), orderLine.getLine() + ""));
+			line.add(new KeyNamePair(orderLine.getM_Product_ID(), orderLine.getM_Product().getName() + ""));
+			if (orderLine.get_Value(MUOM.COLUMNNAME_C_UOM_ID) != null) {
+				int C_UOM_ID = (Integer) orderLine.get_Value(MUOM.COLUMNNAME_C_UOM_ID);
 				MUOM uom = new MUOM(ctx, C_UOM_ID, null);
 				line.add(new KeyNamePair(uom.get_ID(), uom.getName() + ""));
 			} else {
 				line.add(new KeyNamePair(0, ""));
 			}
-			line.add(movementLine.getQtyEntered());
-			line.add(movementLine.get_Value("NewPrice"));
-			line.add(movementLine.get_Value("NewDiscount"));
-			line.add(movementLine.getLineNetAmt());
+			
+			line.add(orderLine.getQtyEntered());
+			line.add(orderLine.get_Value("NewPrice"));
+			line.add(orderLine.get_Value("NewDiscount"));
+			line.add(orderLine.getLineNetAmt());
 			line.add(i == index);
 			i++;
 		}
@@ -491,6 +492,8 @@ public class WQuickInputPO extends CustomForm implements WTableModelListener {
 		BigDecimal qtyMove = (BigDecimal) fQtyOnOK.getValue();
 		BigDecimal PriceEntered = (BigDecimal) fPriceActual.getValue();
 		BigDecimal Discount = ((BigDecimal) fDiscount.getValue());
+		if (Discount == null)
+			Discount = Env.ZERO;
 		BigDecimal DiscountAmt = Discount.divide(Env.ONEHUNDRED);
 		
 		BigDecimal NewPrice = PriceEntered.subtract(PriceEntered.multiply(DiscountAmt));
